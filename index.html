@@ -165,6 +165,39 @@
             padding: 10px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            align-items: center;
+        }
+
+        .font-size-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .font-size-controls .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            min-width: 40px;
+        }
+
+        [data-zoom="1"] {
+            font-size: 16px;
+        }
+
+        [data-zoom="2"] {
+            font-size: 18px;
+        }
+
+        [data-zoom="3"] {
+            font-size: 20px;
+        }
+
+        [data-zoom="4"] {
+            font-size: 22px;
+        }
+
+        [data-zoom="5"] {
+            font-size: 24px;
         }
 
         .map-markers {
@@ -334,6 +367,13 @@
         <button class="btn" onclick="toggleContrast()" aria-label="Cambiar contraste">
             Contraste
         </button>
+        <div class="font-size-controls">
+            <button class="btn" onclick="adjustFontSize(-1)" aria-label="Reducir tamaño de texto">A-</button>
+            <button class="btn" onclick="adjustFontSize(1)" aria-label="Aumentar tamaño de texto">A+</button>
+        </div>
+        <button class="btn" onclick="resetZoom()" aria-label="Restablecer zoom">
+            Restablecer
+        </button>
     </div>
 
     <div id="voiceStatus" role="status" aria-live="polite"></div>
@@ -438,47 +478,58 @@
         const locations = {
             1: {
                 name: "Oficina de admisión",
-                description: "Oficina de admisión: se encuentra en la parte izquierda de la entrada principal. Aquí puedes realizar consultas sobre el proceso de admisión y obtener información sobre las carreras disponibles."
+                description: "Oficina de admisión: se encuentra en la parte izquierda de la entrada principal. Aquí puedes realizar consultas sobre el proceso de admisión y obtener información sobre las carreras disponibles. La oficina cuenta con personal capacitado para atender a personas con discapacidad y brindar información en formatos accesibles.",
+                accessibility: "Acceso a nivel del suelo, puertas anchas para sillas de ruedas, señalización en alto contraste y braille."
             },
             2: {
                 name: "Pabellón D",
-                description: "Pabellón D: tiene 4 pisos se encuentran laboratorios especializados por carrera, no tiene baños para discapacitados ni ascensor. Para llegar, al ingresar siga a la izquierda, pasando por la estatua de César Vallejo."
+                description: "Pabellón D: edificio de 4 pisos donde se encuentran laboratorios especializados por carrera. Para llegar, al ingresar siga a la izquierda, pasando por la estatua de César Vallejo. IMPORTANTE: Este pabellón no cuenta con ascensor ni baños adaptados para personas con discapacidad. Se recomienda coordinar previamente si necesita acceder a los laboratorios de los pisos superiores.",
+                accessibility: "Acceso con escaleras, sin ascensor. Se recomienda solicitar asistencia en la entrada principal."
             },
             3: {
                 name: "Pabellón C",
-                description: "Pabellón C: tiene 1 piso y se ubica al lado izquierdo del pabellon D. Puedes encontrar oficinas administrativas y el tópico."
+                description: "Pabellón C: edificio de 1 piso ubicado al lado izquierdo del pabellón D. Alberga oficinas administrativas y el tópico. El edificio es totalmente accesible con rampas y pasillos amplios. Cuenta con señalización táctil y visual clara.",
+                accessibility: "Totalmente accesible, con rampas, pasillos amplios y señalización inclusiva."
             },
             4: {
                 name: "Tópico",
-                description: "Tópico: Se encuentra en el pabellon C. Aquí recibirás atención médica básica y primeros auxilios durante tu permanencia en el campus."
+                description: "Tópico: Ubicado en el pabellón C, brinda atención médica básica y primeros auxilios. El personal está capacitado para atender a personas con diferentes tipos de discapacidad. Cuenta con camilla ajustable en altura y equipo médico accesible.",
+                accessibility: "Entrada a nivel del suelo, puertas anchas, camilla ajustable y personal capacitado en atención inclusiva."
             },
             5: {
                 name: "Finanzas",
-                description: "Finanzas: se ubica ingresando al lado derecho de la entrada principal. Aquí puedes realizar pagos, consultas sobre pensiones y trámites financieros."
+                description: "Finanzas: ubicado al lado derecho de la entrada principal. Aquí puedes realizar pagos, consultas sobre pensiones y trámites financieros. La oficina cuenta con módulos de atención preferencial y personal capacitado para brindar atención inclusiva.",
+                accessibility: "Módulos de atención a altura accesible, sistema de atención preferencial y personal capacitado en lenguaje de señas."
             },
             6: {
                 name: "Pabellón E",
-                description: "Pabellón E: tiene 1 piso y se encuentran aulas de estudio. Se ubica en la parte frontal izquierda, bajando las escaleras de ingreso."
+                description: "Pabellón E: edificio de 1 piso con aulas de estudio. Se ubica en la parte frontal izquierda. NOTA: El acceso requiere bajar escaleras, pero hay una rampa alternativa señalizada para sillas de ruedas.",
+                accessibility: "Rampa de acceso alternativa, pasillos amplios y señalización clara."
             },
             7: {
                 name: "Pabellón F",
-                description: "Pabellón F: tiene 1 piso encuentran aulas de estudio. Se ubica en la parte frontal, bajando las escaleras de ingreso."
+                description: "Pabellón F: edificio de 1 piso con aulas de estudio. Se ubica en la parte frontal. NOTA: El acceso requiere bajar escaleras, pero cuenta con una rampa lateral y pasamanos en ambos lados.",
+                accessibility: "Rampa de acceso, pasamanos dobles y señalización táctil en el suelo."
             },
             8: {
                 name: "Auditorio Principal",
-                description: "Auditorio principal: se ubica ingresando a unos metros a la derecha. Espacio para eventos académicos, conferencias y presentaciones institucionales."
+                description: "Auditorio principal: ubicado a unos metros a la derecha del ingreso. Espacio para eventos académicos y conferencias. Cuenta con espacios reservados para sillas de ruedas, sistema de audio asistido y acceso a nivel del suelo.",
+                accessibility: "Espacios reservados para sillas de ruedas, sistema de audio asistido, bucle magnético para audífonos."
             },
             9: {
                 name: "Biblioteca",
-                description: "Biblioteca: sigue el camino pasando por el auditorio. Se ubica en los pisos 1 y 2 del pabellon A. Centro de recursos académicos con amplias salas de estudio y acceso a bases de datos digitales."
+                description: "Biblioteca: ubicada en los pisos 1 y 2 del pabellón A, siguiendo el camino desde el auditorio. Centro de recursos académicos con salas de estudio adaptadas y acceso a bases de datos digitales. Personal capacitado para asistir a usuarios con diferentes necesidades.",
+                accessibility: "Mesas ajustables en altura, software de lectura de pantalla, materiales en formatos accesibles."
             },
             10: {
                 name: "Pabellón A",
-                description: "Pabellón A: tiene 7 pisos. Cuenta con ascensor hasta el 6to piso. En el piso 7 se encuentran los laboratorios de computación y no cuenta con baños para discapacitados."
+                description: "Pabellón A: edificio de 7 pisos con ascensor hasta el 6to piso. IMPORTANTE: Los laboratorios de computación en el piso 7 solo son accesibles por escaleras y no hay baños adaptados en ese nivel. Se recomienda coordinar previamente si necesita acceder al último piso.",
+                accessibility: "Ascensor hasta el 6to piso, señalización en braille, sistema de evacuación accesible."
             },
             11: {
                 name: "Pabellón B",
-                description: "Pabellón B: tiene 8 pisos, se ubica frente al pabellon A. Cuenta con ascensor para cada piso. Sí cuenta con baños para discapacitados."
+                description: "Pabellón B: edificio de 8 pisos ubicado frente al pabellón A. Totalmente accesible con ascensor para todos los pisos y baños adaptados en cada nivel. Cuenta con señalización inclusiva y sistemas de emergencia accesibles.",
+                accessibility: "Ascensores en todos los pisos, baños adaptados, señalización inclusiva, rutas de evacuación accesibles."
             }
         };
 
@@ -578,7 +629,18 @@
 
         function playLocation(number) {
             if (locations[number]) {
-                speakMessage(locations[number].description);
+                const location = locations[number];
+                const fullDescription = `${location.description} Información de accesibilidad: ${location.accessibility}`;
+                speakMessage(fullDescription);
+                
+                // Mostrar la información visualmente también
+                showVoiceStatus(fullDescription);
+                
+                // Actualizar el atributo aria-label del marcador para incluir la información de accesibilidad
+                const marker = document.querySelector(`.map-marker[onclick="playLocation(${number})"]`);
+                if (marker) {
+                    marker.setAttribute('aria-label', `${location.name}. ${fullDescription}`);
+                }
             }
         }
 
@@ -722,6 +784,57 @@
             console.log('Ejecutándose como PWA');
             document.body.classList.add('pwa-mode');
         }
+
+        // Control de tamaño de fuente
+        let currentZoom = 1;
+        const maxZoom = 5;
+        const minZoom = 1;
+
+        function adjustFontSize(delta) {
+            currentZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom + delta));
+            document.body.setAttribute('data-zoom', currentZoom);
+            speakMessage(`Tamaño de texto ${delta > 0 ? 'aumentado' : 'reducido'} al nivel ${currentZoom}`);
+            
+            // Ajustar el tamaño de los elementos interactivos
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                if (!button.classList.contains('font-size-controls')) {
+                    button.style.fontSize = `${1 + (currentZoom - 1) * 0.2}em`;
+                    button.style.padding = `${1 + (currentZoom - 1) * 0.2}rem ${2 + (currentZoom - 1) * 0.2}rem`;
+                }
+            });
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            document.body.setAttribute('data-zoom', currentZoom);
+            speakMessage('Tamaño de texto restablecido');
+            
+            // Restablecer el tamaño de los elementos interactivos
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                if (!button.classList.contains('font-size-controls')) {
+                    button.style.fontSize = '';
+                    button.style.padding = '';
+                }
+            });
+        }
+
+        // Soporte para zoom con teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey) {
+                if (e.key === '+' || e.key === '=') {
+                    e.preventDefault();
+                    adjustFontSize(1);
+                } else if (e.key === '-') {
+                    e.preventDefault();
+                    adjustFontSize(-1);
+                } else if (e.key === '0') {
+                    e.preventDefault();
+                    resetZoom();
+                }
+            }
+        });
     </script>
 </body>
 </html>
