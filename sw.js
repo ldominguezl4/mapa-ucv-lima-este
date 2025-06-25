@@ -1,10 +1,9 @@
 const CACHE_NAME = 'mapa-ucv-v1.0.0';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png'
 ];
 
 // Instalar el service worker y cachear recursos
