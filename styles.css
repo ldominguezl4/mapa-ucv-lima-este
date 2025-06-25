@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+.marker {
+  position: absolute;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  font-weight: bold;
+  font-size: 1.25rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: 2px solid white;
+  transition: transform 0.2s ease;
+  user-select: none;
+}
+
+.marker:focus,
+.marker:hover {
+  transform: scale(1.2);
+  outline: none;
+  z-index: 10;
+  border-color: black;
+}
+
+body.dark {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+body.dark .marker {
+  border-color: #e0e0e0;
+}
+
+#contrastToggle {
+  cursor: pointer;
+}
+
+#speechToggle {
+  cursor: pointer;
+}
+
+#routeSvg {
+  stroke: #f59e0b; /* amber-400 */
+  stroke-width: 4;
+  fill: none;
+  pointer-events: none;
+}

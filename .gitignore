@@ -1,0 +1,22 @@
+# Archivos temporales
+*.zip
+descarga.html
+INSTRUCCIONES_INSTALACION.md
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Dependencias de Node.js (si las hubiera)
+node_modules/
+
+# Archivos de IDE
+.vscode/
+.idea/
+
+# Archivos temporales
+*.tmp
+*.temp

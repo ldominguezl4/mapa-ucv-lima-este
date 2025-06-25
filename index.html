@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Interactivo Universidad César Vallejo Lima Este</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Mapa interactivo accesible del campus Universidad César Vallejo Lima Este con información de ubicaciones y navegación por voz">
+    <meta name="theme-color" content="#e74c3c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Mapa UCV Lima Este">
+    <meta name="msapplication-TileColor" content="#2c3e50">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23e74c3c'/%3E%3Ctext x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-family='Arial'%3EM%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Ccircle cx='96' cy='96' r='86' fill='%23e74c3c'/%3E%3Ctext x='96' y='120' text-anchor='middle' fill='white' font-size='80' font-family='Arial'%3EM%3C/text%3E%3C/svg%3E">
+    <style>
+        /* All existing styles remain the same */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #ecf0f1;
+            --accent-color: #e74c3c;
+            --text-color: #2c3e50;
+            --border-color: #bdc3c7;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+
+        [data-theme="high-contrast"] {
+            --primary-color: #000000;
+            --secondary-color: #ffffff;
+            --accent-color: #ffff00;
+            --text-color: #000000;
+            --border-color: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--secondary-color);
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--secondary-color);
+            padding: 1rem 2rem;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover, .btn:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn:focus {
+            outline: 3px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        [data-theme="high-contrast"] .btn {
+            background-color: #000;
+            color: #fff;
+            border: 2px solid #fff;
+        }
+
+        [data-theme="high-contrast"] .btn:hover,
+        [data-theme="high-contrast"] .btn:focus {
+            background-color: #fff;
+            color: #000;
+            border-color: #000;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.5rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+            background: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .map-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            position: relative;
+            border: 2px solid var(--border-color);
+        }
+
+        .map-fallback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-color);
+            background: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            background: var(--secondary-color);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .map-markers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--secondary-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .map-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            background: var(--secondary-color);
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .map-marker:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background: var(--accent-color);
+            color: var(--secondary-color);
+        }
+
+        .map-marker-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .map-marker:hover .map-marker-number {
+            color: var(--secondary-color);
+        }
+
+        [data-theme="high-contrast"] .map-marker {
+            border-color: #000;
+        }
+
+        [data-theme="high-contrast"] .map-marker:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        [data-theme="high-contrast"] .map-marker-number {
+            color: #000;
+        }
+
+        [data-theme="high-contrast"] .map-marker:hover .map-marker-number {
+            color: #fff;
+        }
+
+        .accessibility-info {
+            background: var(--secondary-color);
+            padding: 1rem;
+            margin-top: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .accessibility-info h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .accessibility-info ul {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .accessibility-info li {
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .accessibility-info li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+        }
+
+        footer {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        #voiceStatus {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-color);
+            color: var(--secondary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            display: none;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .map-container {
+                height: 400px;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .btn {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+                width: 100%;
+                max-width: 300px;
+                margin: 0.5rem auto;
+            }
+
+            section {
+                padding: 1.5rem;
+            }
+
+            .controls {
+                top: auto;
+                bottom: 20px;
+                right: 50%;
+                transform: translateX(50%);
+            }
+
+            .marker-button {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls" role="toolbar" aria-label="Controles de accesibilidad">
+        <button class="btn" onclick="toggleContrast()" aria-label="Cambiar contraste">
+            Contraste
+        </button>
+    </div>
+
+    <div id="voiceStatus" role="status" aria-live="polite"></div>
+
+    <header>
+        <h1>Mapa Interactivo Universidad César Vallejo Lima Este</h1>
+        <button id="welcomeBtn" class="btn" aria-label="Escuchar mensaje de bienvenida">
+            Reproducir Bienvenida
+        </button>
+    </header>
+
+    <main>
+        <section aria-label="Mapa oficial Universidad César Vallejo">
+            <div class="map-section">
+                <div class="map-container">
+                    <div id="mapLoading" class="loading">Cargando mapa...</div>
+                    <iframe 
+                        src="https://campusmap.uvcv.edu.pe/SJL/story.html" 
+                        title="Mapa interactivo oficial Universidad César Vallejo"
+                        aria-label="Mapa oficial de la Universidad César Vallejo Lima Este"
+                        onload="this.previousElementSibling.style.display='none'"
+                        onerror="this.style.display='none';document.getElementById('mapFallback').style.display='block'">
+                    </iframe>
+                    <div id="mapFallback" class="map-fallback" style="display: none;">
+                        <p>El mapa oficial no está disponible en este momento.</p>
+                        <p>Por favor, utilice los números al lado para obtener información.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section aria-label="Ubicaciones del campus">
+            <h2>Ubicaciones del Campus</h2>
+            <div class="map-markers" role="list">
+                <div class="map-marker" onclick="playLocation(1)" aria-label="Información sobre Oficina de admisión">
+                    <span class="map-marker-number">1</span>
+                    <span>Admisión</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(2)" aria-label="Información sobre Pabellón D">
+                    <span class="map-marker-number">2</span>
+                    <span>Pabellón D</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(3)" aria-label="Información sobre Pabellón C">
+                    <span class="map-marker-number">3</span>
+                    <span>Pabellón C</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(4)" aria-label="Información sobre Tópico">
+                    <span class="map-marker-number">4</span>
+                    <span>Tópico</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(5)" aria-label="Información sobre Finanzas">
+                    <span class="map-marker-number">5</span>
+                    <span>Finanzas</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(6)" aria-label="Información sobre Pabellón E">
+                    <span class="map-marker-number">6</span>
+                    <span>Pabellón E</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(7)" aria-label="Información sobre Pabellón F">
+                    <span class="map-marker-number">7</span>
+                    <span>Pabellón F</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(8)" aria-label="Información sobre Auditorio principal">
+                    <span class="map-marker-number">8</span>
+                    <span>Auditorio</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(9)" aria-label="Información sobre Biblioteca">
+                    <span class="map-marker-number">9</span>
+                    <span>Biblioteca</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(10)" aria-label="Información sobre Pabellón A">
+                    <span class="map-marker-number">10</span>
+                    <span>Pabellón A</span>
+                </div>
+                <div class="map-marker" onclick="playLocation(11)" aria-label="Información sobre Pabellón B">
+                    <span class="map-marker-number">11</span>
+                    <span>Pabellón B</span>
+                </div>
+            </div>
+        </section>
+
+        <section aria-label="Información de accesibilidad">
+
+            <div class="accessibility-info">
+                <h3>Guía de Accesibilidad</h3>
+                <ul>
+                    <li>Use el botón "Contraste" para cambiar entre modo normal y alto contraste</li>
+                    <li>Presione los botones numerados para escuchar información sobre cada ubicación</li>
+                    <li>Navegue con el teclado usando la tecla Tab y active los botones con Enter o Espacio</li>
+                    <li>El mapa incluye señalizaciones claras para cada área importante del campus</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2023 Universidad César Vallejo Lima Este - Diseñado con accesibilidad e inclusión</p>
+    </footer>
+
+    <script>
+        // Location descriptions
+        const locations = {
+            1: {
+                name: "Oficina de admisión",
+                description: "Oficina de admisión: se encuentra en la parte izquierda de la entrada principal. Aquí puedes realizar consultas sobre el proceso de admisión y obtener información sobre las carreras disponibles."
+            },
+            2: {
+                name: "Pabellón D",
+                description: "Pabellón D: tiene 4 pisos se encuentran laboratorios especializados por carrera, no tiene baños para discapacitados ni ascensor. Para llegar, al ingresar siga a la izquierda, pasando por la estatua de César Vallejo."
+            },
+            3: {
+                name: "Pabellón C",
+                description: "Pabellón C: tiene 1 piso y se ubica al lado izquierdo del pabellon D. Puedes encontrar oficinas administrativas y el tópico."
+            },
+            4: {
+                name: "Tópico",
+                description: "Tópico: Se encuentra en el pabellon C. Aquí recibirás atención médica básica y primeros auxilios durante tu permanencia en el campus."
+            },
+            5: {
+                name: "Finanzas",
+                description: "Finanzas: se ubica ingresando al lado derecho de la entrada principal. Aquí puedes realizar pagos, consultas sobre pensiones y trámites financieros."
+            },
+            6: {
+                name: "Pabellón E",
+                description: "Pabellón E: tiene 1 piso y se encuentran aulas de estudio. Se ubica en la parte frontal izquierda, bajando las escaleras de ingreso."
+            },
+            7: {
+                name: "Pabellón F",
+                description: "Pabellón F: tiene 1 piso encuentran aulas de estudio. Se ubica en la parte frontal, bajando las escaleras de ingreso."
+            },
+            8: {
+                name: "Auditorio Principal",
+                description: "Auditorio principal: se ubica ingresando a unos metros a la derecha. Espacio para eventos académicos, conferencias y presentaciones institucionales."
+            },
+            9: {
+                name: "Biblioteca",
+                description: "Biblioteca: sigue el camino pasando por el auditorio. Se ubica en los pisos 1 y 2 del pabellon A. Centro de recursos académicos con amplias salas de estudio y acceso a bases de datos digitales."
+            },
+            10: {
+                name: "Pabellón A",
+                description: "Pabellón A: tiene 7 pisos. Cuenta con ascensor hasta el 6to piso. En el piso 7 se encuentran los laboratorios de computación y no cuenta con baños para discapacitados."
+            },
+            11: {
+                name: "Pabellón B",
+                description: "Pabellón B: tiene 8 pisos, se ubica frente al pabellon A. Cuenta con ascensor para cada piso. Sí cuenta con baños para discapacitados."
+            }
+        };
+
+        // Simple text display system with audio fallback
+        let speaking = false;
+
+        function speakMessage(message) {
+            try {
+                // Try to use speech synthesis if available
+                if (window.speechSynthesis) {
+                    if (speaking) {
+                        window.speechSynthesis.cancel();
+                    }
+
+                    speaking = true;
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.lang = 'es-ES';
+                    utterance.onend = () => {
+                        speaking = false;
+                        // Don't hide automatically when speech ends, let user read
+                    };
+                    window.speechSynthesis.speak(utterance);
+                }
+
+                // Always show text visually with longer duration
+                showVoiceStatus(message);
+                setTimeout(hideVoiceStatus, 12000); // Increased to 12 seconds
+
+            } catch (error) {
+                console.warn('Speech synthesis not available:', error);
+                // Fallback to just showing the text with longer duration
+                showVoiceStatus(message);
+                setTimeout(hideVoiceStatus, 12000); // Increased to 12 seconds
+            }
+        }
+
+        function showVoiceStatus(message) {
+            const status = document.getElementById('voiceStatus');
+            
+            // Create close button if it doesn't exist
+            if (!status.querySelector('.close-btn')) {
+                const closeBtn = document.createElement('button');
+                closeBtn.innerHTML = '×';
+                closeBtn.className = 'close-btn';
+                closeBtn.style.cssText = `
+                    position: absolute;
+                    top: 5px;
+                    right: 10px;
+                    background: none;
+                    border: none;
+                    font-size: 1.5rem;
+                    color: white;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 25px;
+                    height: 25px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                closeBtn.onclick = hideVoiceStatus;
+                status.appendChild(closeBtn);
+            }
+            
+            // Update message content
+            const textNode = status.childNodes[0];
+            if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+                textNode.textContent = message;
+            } else {
+                status.insertBefore(document.createTextNode(message), status.firstChild);
+            }
+            
+            // Style the status box
+            status.style.display = 'block';
+            status.style.maxWidth = '90%';
+            status.style.padding = '1.5rem 2rem';
+            status.style.textAlign = 'left';
+            status.style.lineHeight = '1.6';
+            status.style.fontSize = '1.1rem';
+            status.style.position = 'relative';
+            status.style.borderRadius = '8px';
+            status.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+        }
+
+        function hideVoiceStatus() {
+            const status = document.getElementById('voiceStatus');
+            status.style.display = 'none';
+        }
+
+        function playWelcomeMessage() {
+            const welcomeMessage = "Bienvenido al mapa interactivo de la Universidad César Vallejo Lima Este. " +
+                                 "Use los botones numerados para obtener información sobre las diferentes áreas del campus. " +
+                                 "Para mejorar la accesibilidad, puede usar el botón de contraste en la esquina superior derecha. " +
+                                 "También puede instalar esta aplicación en su dispositivo usando el botón Instalar App para acceso rápido.";
+            speakMessage(welcomeMessage);
+        }
+
+        function playLocation(number) {
+            if (locations[number]) {
+                speakMessage(locations[number].description);
+            }
+        }
+
+        function toggleContrast() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            if (currentTheme === 'high-contrast') {
+                body.removeAttribute('data-theme');
+                speakMessage("Modo de contraste normal activado");
+            } else {
+                body.setAttribute('data-theme', 'high-contrast');
+                speakMessage("Modo de alto contraste activado");
+            }
+        }
+
+        function showVoiceStatus(message) {
+            const status = document.getElementById('voiceStatus');
+            status.textContent = message;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 2000);
+        }
+
+        // Initialize page when document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Document ready');
+
+            // Add click listeners
+            document.getElementById('welcomeBtn').addEventListener('click', () => {
+                console.log('Welcome button clicked');
+                playWelcomeMessage();
+            });
+            
+            // Add click listeners to all map markers
+            document.querySelectorAll('.map-marker').forEach(marker => {
+                const number = marker.querySelector('.map-marker-number').textContent;
+                marker.addEventListener('click', () => {
+                    console.log('Location clicked:', number);
+                    playLocation(parseInt(number));
+                });
+            });
+
+            console.log('Event listeners initialized');
+
+            // Automatically play welcome message after a short delay
+            setTimeout(() => {
+                console.log('Auto-playing welcome message');
+                playWelcomeMessage();
+            }, 1500); // Wait 1.5 seconds before playing
+        });
+
+        // Keyboard navigation enhancement
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (document.activeElement.classList.contains('marker-button')) {
+                    document.activeElement.click();
+                }
+            }
+        });
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado exitosamente:', registration.scope);
+                        
+                        // Verificar si hay una actualización disponible (actualización silenciosa)
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Actualización silenciosa sin molestar al usuario
+                                    console.log('Nueva versión disponible, se aplicará en la próxima visita');
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.log('Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        let installButton;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevenir que Chrome 67 y anteriores muestren automáticamente el prompt
+            e.preventDefault();
+            // Guardar el evento para poder dispararlo después
+            deferredPrompt = e;
+            
+            // Crear botón de instalación si no existe
+            if (!installButton) {
+                installButton = document.createElement('button');
+                installButton.textContent = '📱 Instalar App';
+                installButton.className = 'btn install-btn';
+                installButton.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 1001;
+                    background: #27ae60;
+                    border: none;
+                    padding: 12px 20px;
+                    border-radius: 25px;
+                    color: white;
+                    font-weight: bold;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    cursor: pointer;
+                    font-size: 14px;
+                `;
+                
+                installButton.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        // Mostrar el prompt de instalación
+                        deferredPrompt.prompt();
+                        // Esperar a que el usuario responda al prompt
+                        const { outcome } = await deferredPrompt.userChoice;
+                        console.log(`Resultado de instalación: ${outcome}`);
+                        // Limpiar el prompt guardado
+                        deferredPrompt = null;
+                        // Ocultar el botón
+                        installButton.style.display = 'none';
+                    }
+                });
+                
+                document.body.appendChild(installButton);
+            }
+        });
+
+        // Ocultar botón de instalación cuando la app ya está instalada
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA instalada exitosamente');
+            if (installButton) {
+                installButton.style.display = 'none';
+            }
+            deferredPrompt = null;
+        });
+
+        // Detectar si la app se está ejecutando como PWA
+        function isPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true;
+        }
+
+        // Mostrar mensaje de bienvenida especial para PWA
+        if (isPWA()) {
+            console.log('Ejecutándose como PWA');
+            // Agregar clase especial para estilos PWA
+            document.body.classList.add('pwa-mode');
+        }
+    </script>
+</body>
+</html>
