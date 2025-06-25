@@ -655,72 +655,58 @@
 
         // PWA Install Prompt
         let deferredPrompt;
-        let installButton;
+        const installButton = document.createElement('button');
+        installButton.textContent = '📱 Instalar App';
+        installButton.className = 'btn install-btn';
+        installButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: #27ae60;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            font-size: 14px;
+            display: none;
+        `;
+        
+        // Agregar el botón al DOM
+        document.body.appendChild(installButton);
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevenir que Chrome 67 y anteriores muestren automáticamente el prompt
-            e.preventDefault();
-            // Guardar el evento para poder dispararlo después
-            deferredPrompt = e;
-            
-            // Crear botón de instalación si no existe
-            if (!installButton) {
-                installButton = document.createElement('button');
-                installButton.textContent = '📱 Instalar App';
-                installButton.className = 'btn install-btn';
-                installButton.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    z-index: 1001;
-                    background: #27ae60;
-                    border: none;
-                    padding: 12px 20px;
-                    border-radius: 25px;
-                    color: white;
-                    font-weight: bold;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                    cursor: pointer;
-                    font-size: 14px;
-                `;
-                
-                installButton.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        // Mostrar el prompt de instalación
-                        deferredPrompt.prompt();
-                        // Esperar a que el usuario responda al prompt
-                        const { outcome } = await deferredPrompt.userChoice;
-                        console.log(`Resultado de instalación: ${outcome}`);
-                        // Limpiar el prompt guardado
-                        deferredPrompt = null;
-                        // Ocultar el botón
-                        installButton.style.display = 'none';
-                    }
-                });
-                
-                document.body.appendChild(installButton);
+        // Manejar el evento de instalación
+        installButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`Resultado de instalación: ${outcome}`);
+                deferredPrompt = null;
+                installButton.style.display = 'none';
             }
         });
 
-        // Ocultar botón de instalación cuando la app ya está instalada
+        // Escuchar el evento beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.style.display = 'block';
+        });
+
+        // Ocultar el botón cuando la app ya está instalada
         window.addEventListener('appinstalled', () => {
             console.log('PWA instalada exitosamente');
-            if (installButton) {
-                installButton.style.display = 'none';
-            }
+            installButton.style.display = 'none';
             deferredPrompt = null;
         });
 
         // Detectar si la app se está ejecutando como PWA
-        function isPWA() {
-            return window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone === true;
-        }
-
-        // Mostrar mensaje de bienvenida especial para PWA
-        if (isPWA()) {
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
             console.log('Ejecutándose como PWA');
-            // Agregar clase especial para estilos PWA
             document.body.classList.add('pwa-mode');
         }
     </script>
